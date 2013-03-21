@@ -1,0 +1,7 @@
+{
+    "require-dev": {
+        "themattharris/tmhoauth": "*",
+        "phpunit/phpunit": "3.7.*",
+        "phpunit/php-invoker": "*"
+    }
+}
