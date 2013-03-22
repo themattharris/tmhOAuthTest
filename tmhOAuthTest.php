@@ -15,8 +15,8 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
     return new mockTmhOAuth(array(
       'consumer_key'    => 'xvz1evFS4wEEPTGEFPHBog',
       'consumer_secret' => 'kAcSOqF21Fu85e7zjz7ZN2U4ZRhfV3WpwPAoE3Z7kBw',
-      'user_token'      => '370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb',
-      'user_secret'     => 'LswwdoUaIvS8ltyTt5jkRh4J50vUPVVHtR2YPi5kE',
+      'token'           => '370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb',
+      'secret'          => 'LswwdoUaIvS8ltyTt5jkRh4J50vUPVVHtR2YPi5kE',
       'force_timestamp' => '1318622958',
       'force_nonce'     => 'kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg',
     ));
@@ -42,7 +42,7 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testBlockPreventsCurlRequests() {
-    $tmhOAuth = new tmhOAuth(array('block' => true));
+    $tmhOAuth = new mockTmhOAuth();
     $tmhOAuth->unauthenticated_request(array(
       'method' => 'GET',
       'url' => 'http://localhost',
@@ -161,14 +161,89 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testSettingUserTokenAndSecret() {
-
+    $config = array(
+      'consumer_key' => 'CONSUMER_KEY',
+      'consumer_secret' => 'CONSUMER_SECRET',
+      'user_token' => 'OAUTH_TOKEN',
+      'user_secret' => 'OAUTH_SECRET',
+    );
+    $tmhOAuth = new mockTmhOAuth($config);
+    $tmhOAuth->user_request(array(
+      'url' => 'http://localhost'
+    ));
+    $this->assertArrayHasKey(
+      'oauth1_params',
+      $tmhOAuth->request_settings
+    );
+    $this->assertEquals(
+      $config['user_token'],
+      $tmhOAuth->request_settings['oauth1_params']['oauth_token']
+    );
+    $this->assertEquals(
+      $tmhOAuth->request_settings['signing_key'],
+      "${config['consumer_secret']}&${config['user_secret']}"
+    );
   }
 
   public function testSettingOAuthTokenAndSecret() {
-
+    $config = array(
+      'consumer_key' => 'CONSUMER_KEY',
+      'consumer_secret' => 'CONSUMER_SECRET',
+      'token' => 'OAUTH_TOKEN',
+      'secret' => 'OAUTH_SECRET',
+    );
+    $tmhOAuth = new mockTmhOAuth($config);
+    $tmhOAuth->user_request(array(
+      'url' => 'http://localhost'
+    ));
+    $this->assertArrayHasKey(
+      'oauth1_params',
+      $tmhOAuth->request_settings
+    );
+    $this->assertEquals(
+      $config['token'],
+      $tmhOAuth->request_settings['oauth1_params']['oauth_token']
+    );
+    $this->assertEquals(
+      $tmhOAuth->request_settings['signing_key'],
+      "${config['consumer_secret']}&${config['secret']}"
+    );
   }
 
   public function testReconfigure() {
+    $config = array(
+      'consumer_key' => 'CONSUMER_KEY',
+      'consumer_secret' => 'CONSUMER_SECRET',
+      'token' => 'OAUTH_TOKEN',
+      'secret' => 'OAUTH_SECRET',
+    );
+    $config2 = array(
+      'consumer_key' => 'SOME_KEY',
+      'secret' => 'SOME_SECRET'
+    );
 
+    $tmhOAuth = new mockTmhOAuth($config);
+    foreach ($config as $k => $v) {
+      $this->assertEquals(
+        $v,
+        $tmhOAuth->config["${k}"]
+      );
+    }
+    $tmhOAuth->reconfigure($config2);
+    foreach ($config2 as $k => $v) {
+      $this->assertEquals(
+        $v,
+        $tmhOAuth->config["${k}"]
+      );
+    }
+
+    $this->assertEquals(
+      '',
+      $tmhOAuth->config['token']
+    );
+    $this->assertEquals(
+      '',
+      $tmhOAuth->config['consumer_secret']
+    );
   }
 }
