@@ -41,7 +41,7 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
       $tmhOAuth->request_settings['headers']['Authorization'],
       'OAuth oauth_consumer_key="xvz1evFS4wEEPTGEFPHBog", oauth_nonce="kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg", oauth_signature="tnnArxj06cWHq44gCs1OSKk%2FjLY%3D", oauth_signature_method="HMAC-SHA1", oauth_timestamp="1318622958", oauth_token="370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb", oauth_version="1.0"'
     );
-    $this->assertEquals($tmhOAuth->request_settings['encoded_params'], array(
+    $this->assertEquals($tmhOAuth->request_settings['prepared_params'], array(
       'include_entities' => 'true',
       'status' => 'Hello%20Ladies%20%2B%20Gentlemen%2C%20a%20signed%20OAuth%20request%21',
     ));
@@ -167,7 +167,7 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
       )
     ));
 
-    $this->assertEquals($tmhOAuth->request_settings['encoded_params'], array(
+    $this->assertEquals($tmhOAuth->request_settings['prepared_params'], array(
       'symbols' => '%00%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F%10%11%12%13%14%15%16%17%18%19%1A%1B%1C%1D%1E%1F'.
                    '%20%21%22%23%24%25%26%27%28%29%2A%2B%2C-.%2F0123456789%3A%3B%3C%3D%3E%3F%40ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
                    '%5B%5C%5D%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~%7F%80%81%82%83%84%85%86%87%88%89%8A%8B%8C%8D%8E%8F'.
@@ -186,8 +186,6 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
                '%D0%D1%D2%D3%D4%D5%D6%D7%D8%D9%DA%DB%DC%DD%DE%DF%E0%E1%E2%E3%E4%E5%E6%E7%E8%E9%EA%EB%EC%ED%EE%EF'.
                '%F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE'
     );
-
-    // TODO: test the upper character set
   }
 
   public function testOAuth1Signing() {
@@ -216,6 +214,109 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
     $this->dtcExampleValidations($tmhOAuth);
   }
 
+  public function testUserPostRequest() {
+    $tmhOAuth = $this->dtcExampleApp();
+    $tmhOAuth->user_request(array(
+      'method' => 'POST',
+      'url' => $tmhOAuth->url('1/statuses/update'),
+      'params' => array(
+        'status' => 'Hello Ladies + Gentlemen, a signed OAuth request!',
+        'include_entities' => 'true'
+      )
+    ));
+
+    $this->assertEquals(
+      $tmhOAuth->request_settings['url'],
+      'https://api.twitter.com/1/statuses/update.json'
+    );
+    $this->assertEquals(
+      $tmhOAuth->request_settings['prepared_params'],
+      array(
+        'include_entities' => 'true',
+        'status' => 'Hello%20Ladies%20%2B%20Gentlemen%2C%20a%20signed%20OAuth%20request%21',
+    ));
+    $this->assertEquals(
+      $tmhOAuth->request_settings['postfields'],
+      "include_entities=true&status=Hello%20Ladies%20%2B%20Gentlemen%2C%20a%20signed%20OAuth%20request%21"
+    );
+    $this->assertEquals(
+      $tmhOAuth->request_settings['basestring'],
+      'POST&https%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fupdate.json&include_entities%3Dtrue%26oauth_consumer_key%3Dxvz1evFS4wEEPTGEFPHBog%26oauth_nonce%3DkYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1318622958%26oauth_token%3D370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb%26oauth_version%3D1.0%26status%3DHello%2520Ladies%2520%252B%2520Gentlemen%252C%2520a%2520signed%2520OAuth%2520request%2521'
+    );
+  }
+
+  public function testUserGetRequest() {
+    $tmhOAuth = $this->dtcExampleApp();
+    $tmhOAuth->user_request(array(
+      'method' => 'GET',
+      'url' => $tmhOAuth->url('1.1/users/lookup'),
+      'params' => array(
+        'user_id' => array(
+          777925,
+        ),
+        'screen_name' => array(
+          'tmhoauth',
+        ),
+        'map' => 1
+      )
+    ));
+
+    $this->assertEquals(
+      $tmhOAuth->request_settings['url'],
+      'https://api.twitter.com/1.1/users/lookup.json?map=1&screen_name=tmhoauth&user_id=777925'
+    );
+    $this->assertEquals(
+      $tmhOAuth->request_settings['prepared_params'],
+      array(
+        'map' => '1',
+        'screen_name' => 'tmhoauth',
+        'user_id' => '777925'
+    ));
+    $this->assertEquals(
+      $tmhOAuth->request_settings['querystring'],
+      "map=1&screen_name=tmhoauth&user_id=777925"
+    );
+    $this->assertEquals(
+      $tmhOAuth->request_settings['basestring'],
+      'GET&https%3A%2F%2Fapi.twitter.com%2F1.1%2Fusers%2Flookup.json&map%3D1%26oauth_consumer_key%3Dxvz1evFS4wEEPTGEFPHBog%26oauth_nonce%3DkYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1318622958%26oauth_token%3D370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb%26oauth_version%3D1.0%26screen_name%3Dtmhoauth%26user_id%3D777925'
+    );
+  }
+
+  public function testUserMultipartRequest() {
+    $tmhOAuth = $this->dtcExampleApp();
+    $tmhOAuth->user_request(array(
+      'method' => 'POST',
+      'url' => $tmhOAuth->url('1.1/statuses/update_with_media'),
+      'params' => array(
+        'media[]'  => "@/home/picture.jpg;type=image/jpeg;filename=picture.jpg",
+        'status'   => 'a photo',
+      ),
+      'multipart' => true,
+    ));
+
+    $this->assertEquals(
+      $tmhOAuth->request_settings['url'],
+      'https://api.twitter.com/1.1/statuses/update_with_media.json'
+    );
+    $this->assertEquals(
+      $tmhOAuth->request_settings['prepared_params'],
+      array(
+        'media[]'  => "@/home/picture.jpg;type=image/jpeg;filename=picture.jpg",
+        'status'   => 'a photo',
+    ));
+    $this->assertEquals(
+      $tmhOAuth->request_settings['postfields'],
+      array(
+        'media[]'  => "@/home/picture.jpg;type=image/jpeg;filename=picture.jpg",
+        'status'   => 'a photo',
+    ));
+    $this->assertEquals(
+      $tmhOAuth->request_settings['basestring'],
+      'POST&https%3A%2F%2Fapi.twitter.com%2F1.1%2Fstatuses%2Fupdate_with_media.json&oauth_consumer_key%3Dxvz1evFS4wEEPTGEFPHBog%26oauth_nonce%3DkYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1318622958%26oauth_token%3D370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb%26oauth_version%3D1.0'
+    );
+  }
+
+
   public function testOAuth1AppOnlyRequest() {
     $tmhOAuth = $this->dtcExampleApp();
     $tmhOAuth->apponly_request(array(
@@ -242,6 +343,10 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(
       $tmhOAuth->request_settings['headers']['Authorization'],
       'OAuth oauth_consumer_key="xvz1evFS4wEEPTGEFPHBog", oauth_nonce="kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg", oauth_signature="PH2eOsQuERn64pHhmmPWZPkNLow%3D", oauth_signature_method="HMAC-SHA1", oauth_timestamp="1318622958", oauth_version="1.0"'
+    );
+    $this->assertEquals(
+      $tmhOAuth->request_settings['url'],
+      'https://api.twitter.com/1/statuses/user_timeline.json?screen_name=themattharris'
     );
   }
 
