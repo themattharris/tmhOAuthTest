@@ -10,6 +10,8 @@ class mockTmhOAuth extends tmhOAuth {
   }
 }
 
+echo 'Testing tmhOAuth ' . mockTmhOAuth::VERSION . PHP_EOL;
+
 class tmhOAuthTest extends PHPUnit_Framework_TestCase {
   private function dtcAppOnlyExampleApp() {
     return new mockTmhOAuth(array(
