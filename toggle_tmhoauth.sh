@@ -8,7 +8,7 @@ lib='tmhoauth'
 
 if [[ -e "${VENDOR_PATH}/${VENDOR_TMH}" ]]; then
   echo 'Found vendored tmhoauth moved out the way, restoring it'
-  rm "${VENDOR_PATH}/${lib}"
+  rm -rf "${VENDOR_PATH}/${lib}"
   if [[ $? != 0 ]]; then
     echo 'FATAL: could not erase symlink. this is probably a directory'
     exit 1
