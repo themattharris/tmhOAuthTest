@@ -290,7 +290,7 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
       'method' => 'POST',
       'url' => $tmhOAuth->url('1.1/statuses/update_with_media'),
       'params' => array(
-        'media[]'  => "@/home/picture.jpg;type=image/jpeg;filename=picture.jpg",
+        'media[]'  => "@".__FILE__.";type=image/jpeg;filename=picture.jpg",
         'status'   => 'a photo',
       ),
       'multipart' => true,
@@ -303,13 +303,13 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(
       $tmhOAuth->request_settings['prepared_params'],
       array(
-        'media[]'  => "@/home/picture.jpg;type=image/jpeg;filename=picture.jpg",
+        'media[]'  => "@".__FILE__.";type=image/jpeg;filename=picture.jpg",
         'status'   => 'a photo',
     ));
     $this->assertEquals(
       $tmhOAuth->request_settings['postfields'],
       array(
-        'media[]'  => "@/home/picture.jpg;type=image/jpeg;filename=picture.jpg",
+        'media[]'  => "@".__FILE__.";type=image/jpeg;filename=picture.jpg",
         'status'   => 'a photo',
     ));
     $this->assertEquals(
@@ -318,6 +318,58 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
     );
   }
 
+  public function testMultipartEscaping() {
+    $tmhOAuth = $this->dtcExampleApp();
+    $tmhOAuth->user_request(array(
+      'method' => 'POST',
+      'url' => $tmhOAuth->url('1.1/statuses/update_with_media'),
+      'params' => array(
+        'media[]'  => "@".__FILE__.";type=image/jpeg;filename=picture.jpg",
+        'status'   => "@tmhOAuth posted a picture",
+      ),
+      'multipart' => true,
+    ));
+
+    $this->assertEquals(
+      $tmhOAuth->request_settings['prepared_params'],
+      array(
+        'media[]'  => "@".__FILE__.";type=image/jpeg;filename=picture.jpg",
+        'status'   => " @tmhOAuth posted a picture",
+    ));
+    $this->assertEquals(
+      $tmhOAuth->request_settings['postfields'],
+      array(
+        'media[]'  => "@".__FILE__.";type=image/jpeg;filename=picture.jpg",
+        'status'   => " @tmhOAuth posted a picture",
+    ));
+    $this->assertEquals(
+      $tmhOAuth->request_settings['basestring'],
+      'POST&https%3A%2F%2Fapi.twitter.com%2F1.1%2Fstatuses%2Fupdate_with_media.json&oauth_consumer_key%3Dxvz1evFS4wEEPTGEFPHBog%26oauth_nonce%3DkYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1318622958%26oauth_token%3D370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb%26oauth_version%3D1.0'
+    );
+  }
+
+  public function testMultipartEscapingDoesntDoAnythingOnFormEncoded() {
+    $tmhOAuth = $this->dtcExampleApp();
+    $tmhOAuth->user_request(array(
+      'method' => 'POST',
+      'url' => $tmhOAuth->url('1/statuses/update'),
+      'params' => array(
+        'status' => '@tmhOAuth, see my signed OAuth request!',
+        'include_entities' => 'true'
+      )
+    ));
+
+    $this->assertEquals(
+      $tmhOAuth->request_settings['prepared_params'],
+      array(
+        'status'   => "%40tmhOAuth%2C%20see%20my%20signed%20OAuth%20request%21",
+        'include_entities' => 'true',
+    ));
+    $this->assertEquals(
+      $tmhOAuth->request_settings['postfields'],
+      "include_entities=true&status=%40tmhOAuth%2C%20see%20my%20signed%20OAuth%20request%21"
+    );
+  }
 
   public function testOAuth1AppOnlyRequest() {
     $tmhOAuth = $this->dtcExampleApp();
