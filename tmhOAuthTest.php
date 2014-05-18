@@ -30,6 +30,13 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
     ));
   }
 
+  private function mediaOrCurlFile() {
+    if (class_exists('CurlFile', false))
+      return new CurlFile(__FILE__);
+
+    return "@".__FILE__.";type=image/jpeg;filename=picture.jpg";
+  }
+
   private function dtcExampleValidations($tmhOAuth) {
     $this->assertEquals(
       $tmhOAuth->request_settings['basestring'],
@@ -290,7 +297,7 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
       'method' => 'POST',
       'url' => $tmhOAuth->url('1.1/statuses/update_with_media'),
       'params' => array(
-        'media[]'  => "@".__FILE__.";type=image/jpeg;filename=picture.jpg",
+        'media[]'  => $this->mediaOrCurlFile(),
         'status'   => 'a photo',
       ),
       'multipart' => true,
@@ -303,13 +310,13 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(
       $tmhOAuth->request_settings['prepared_params'],
       array(
-        'media[]'  => "@".__FILE__.";type=image/jpeg;filename=picture.jpg",
+        'media[]'  => $this->mediaOrCurlFile(),
         'status'   => 'a photo',
     ));
     $this->assertEquals(
       $tmhOAuth->request_settings['postfields'],
       array(
-        'media[]'  => "@".__FILE__.";type=image/jpeg;filename=picture.jpg",
+        'media[]'  => $this->mediaOrCurlFile(),
         'status'   => 'a photo',
     ));
     $this->assertEquals(
@@ -324,7 +331,7 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
       'method' => 'POST',
       'url' => $tmhOAuth->url('1.1/statuses/update_with_media'),
       'params' => array(
-        'media[]'  => "@".__FILE__.";type=image/jpeg;filename=picture.jpg",
+        'media[]'  => $this->mediaOrCurlFile(),
         'status'   => "@tmhOAuth posted a picture",
       ),
       'multipart' => true,
@@ -333,13 +340,13 @@ class tmhOAuthTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(
       $tmhOAuth->request_settings['prepared_params'],
       array(
-        'media[]'  => "@".__FILE__.";type=image/jpeg;filename=picture.jpg",
+        'media[]'  => $this->mediaOrCurlFile(),
         'status'   => " @tmhOAuth posted a picture",
     ));
     $this->assertEquals(
       $tmhOAuth->request_settings['postfields'],
       array(
-        'media[]'  => "@".__FILE__.";type=image/jpeg;filename=picture.jpg",
+        'media[]'  => $this->mediaOrCurlFile(),
         'status'   => " @tmhOAuth posted a picture",
     ));
     $this->assertEquals(
